@@ -7,6 +7,7 @@ require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 const mongoURI = process.env.MONGODB_URI_PROD;
+// 변경사항
 
 app.use(cors());
 app.use(bodyParser.json()); // req.body가 객체로 인식됨
