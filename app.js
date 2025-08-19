@@ -9,6 +9,7 @@ const indexRouter = require("./routes/index");
 
 const mongoURI = process.env.MONGODB_URI_PROD;
 const app = express();
+const PORT = process.env.PORT || 4000;
 
 app.use(cors());
 app.use(bodyParser.json()); // req.body가 객체로 인식됨
@@ -21,6 +22,6 @@ mongoose
   .then(() => console.log("mongoose connected"))
   .catch((err) => console.log("DB connection fail", err));
 
-app.listen(process.env.PORT || 5000, () => {
-  console.log("server on");
+app.listen(PORT, () => {
+  console.log(`server on ${PORT}`);
 });
