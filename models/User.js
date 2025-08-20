@@ -25,7 +25,10 @@ const userSchema = new Schema(
     },
     profile: {
       type: String,
-      default: () => process.env.DEFAULT_PROFILE || "/default_profile.png",
+      required: false, // 가입 시 프로필 업로드가 없으므로 필수 해제
+      default: null, // 값이 없으면 null로 저장
+      trim: true, // 문자열 앞뒤 공백 제거 후 저장
+      set: (v) => (typeof v === "string" && v.trim() ? v.trim() : null), // 빈 문자열이 들어오는 실수를 방지: 빈 값이면 null로 정규화
     },
     // 권장: 저장하지 말고 virtual populate 사용 (아래 주석 참고)
     diaryIds: [{ type: Schema.Types.ObjectId, ref: "Diary" }],
