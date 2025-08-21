@@ -17,6 +17,7 @@ const diarySchema = new Schema(
     image: { type: String },
     isPublic: { type: Boolean, default: true },
     corrections: [correctionSchema],
+    date: { type: Date, required: true },
   },
   { timestamps: true }
 );
