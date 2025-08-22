@@ -22,5 +22,11 @@ const diarySchema = new Schema(
   { timestamps: true }
 );
 
+// 공개 피드 최신순 무한 스크롤
+diarySchema.index({ isPublic: 1, _id: -1 });
+
+// 사용자별 특정 날짜 (하루 한 편 정책)
+diarySchema.index({ userId: 1, date: 1 }, { unique: true });
+
 const Diary = mongoose.model("Diary", diarySchema);
 module.exports = Diary;
