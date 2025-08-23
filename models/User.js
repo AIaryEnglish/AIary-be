@@ -30,8 +30,6 @@ const userSchema = new Schema(
       trim: true, // 문자열 앞뒤 공백 제거 후 저장
       set: (v) => (typeof v === "string" && v.trim() ? v.trim() : null), // 빈 문자열이 들어오는 실수를 방지: 빈 값이면 null로 정규화
     },
-    // 권장: 저장하지 말고 virtual populate 사용 (아래 주석 참고)
-    diaryIds: [{ type: Schema.Types.ObjectId, ref: "Diary" }],
   },
   {
     timestamps: true,
@@ -55,13 +53,13 @@ const userSchema = new Schema(
   }
 );
 
-// 권장: User에는 배열 저장 X, Diary.author로 역참조
-// userSchema.virtual("diaries", {
-//   ref: "Diary",
-//   localField: "_id",
-//   foreignField: "author",
-//   options: { sort: { createdAt: -1 } },
-// });
+// User에는 배열 저장 X, Diary.userId로 역참조
+userSchema.virtual("diaries", {
+  ref: "Diary",
+  localField: "_id",
+  foreignField: "userId",
+  options: { sort: { createdAt: -1 } },
+});
 
 const User = mongoose.model("User", userSchema);
 module.exports = User;
