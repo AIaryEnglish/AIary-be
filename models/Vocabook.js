@@ -8,6 +8,7 @@ const vocabookSchema = new Schema(
     word: { type: String, required: true, trim: true }, // 저장된 단어
     meaning: { type: String }, // OpenAI에서 받아온 뜻
     example: { type: String }, // OpenAI에서 받아온 예문
+    status: { type: String, default: "learning" }, //단어 상태
   },
   {
     timestamps: true, // createdAt, updatedAt 자동 관리

@@ -3,6 +3,7 @@ require("dotenv").config();
 
 const User = require("../models/User");
 const Diary = require("../models/Diary");
+const Vocabook = require("../models/Vocabook");
 
 const MONGODB_URI = process.env.MONGODB_URI_PROD;
 
@@ -14,7 +15,8 @@ const seed = async () => {
     // 기존 데이터 삭제
     await User.deleteMany({});
     await Diary.deleteMany({});
-    console.log("기존 User/Diary 데이터 삭제 완료");
+    await Vocabook.deleteMany({});
+    console.log("기존 User/Diary/Vocab 데이터 삭제 완료");
 
     // 1. User 시드 데이터 생성 및 삽입
     const users = await User.insertMany([
@@ -117,6 +119,33 @@ const seed = async () => {
 
     await Diary.insertMany(diaries);
     console.log("Diary 시드 데이터 삽입 완료");
+
+    const aliceVocabDiary = await Diary.findOne({
+      title: /Vocabulary List/,
+    });
+    console.log("Alice Vocabulary Diary ID:", aliceVocabDiary._id);
+
+    if (aliceVocabDiary) {
+      await Vocabook.insertMany([
+        {
+          userId: users[0]._id,
+          diaryId: aliceVocabDiary._id,
+          word: "green",
+          meaning: "having the colour of grass",
+          example: "Wait for the light to turn green.",
+          status: "mastered",
+        },
+        {
+          userId: users[0]._id,
+          diaryId: aliceVocabDiary._id,
+          word: "study",
+          meaning: "to learn about a subject",
+          example: "She studies English every morning.",
+          status: "learning",
+        },
+      ]);
+      console.log("Vocabook 시드 데이터 삽입 완료");
+    }
   } catch (error) {
     console.error(error);
     process.exitCode = 1;
