@@ -11,7 +11,7 @@ function kstDateKey(date = new Date()) {
 // 오늘로부터 n일 전의 날짜를 KST 기준 "YYYY-MM-DD" 문자열로 변환
 function kstDateKeyMinusDays(days) {
   const ms = days * 24 * 60 * 60 * 1000;
-  return kstDateKey(newDate(Date.now() - ms));
+  return kstDateKey(new Date(Date.now() - ms));
 }
 
 module.exports = { kstDateKey, kstDateKeyMinusDays, ZONE };
