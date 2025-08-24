@@ -1,9 +1,10 @@
 require("dotenv").config();
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const apiEndpoint = 'https://api.openai.com/v1/chat/completions';
 
 // 공통 함수: ChatGPT API 호출
 const callChatGPT = async (prompt, temperature = 0.3) => {
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+  const response = await fetch(apiEndpoint, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${OPENAI_API_KEY}`,

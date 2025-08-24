@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 require("../models/User");
 const Diary = require("../models/Diary");
 const { correctDiary, generateDiaryComment } = require("../services/chatGPT");
+const isValidDiaryDate = require("../utils/isValidDiaryDate");
 
 const PAGE_SIZE = 9; // 상의 후 변경
 
@@ -11,18 +12,7 @@ diaryController.createDiary = async (req, res) => {
   const { userId, title, content, image, isPublic, date } = req.body || {};
 
   try {
-    const diaryDate = new Date(date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // 오늘 0시 기준
-    const twoDaysAgo = new Date(today);
-    twoDaysAgo.setDate(today.getDate() - 2);
-
-    if (diaryDate < twoDaysAgo || diaryDate > today) {
-      return res.status(400).json({
-        success: false,
-        message: "작성 가능한 날짜는 오늘 기준 -2일부터 오늘까지 입니다.",
-      });
-    }
+    if(!isValidDiaryDate(date)) throw new Error("작성 가능한 날짜는 오늘 기준 -2일부터 오늘까지 입니다.")
 
     const sentences = content.split(/[\n.?!]+/).filter((s) => s.trim() !== "");
 
@@ -56,7 +46,7 @@ diaryController.createDiary = async (req, res) => {
     const savedDiary = await diary.save();
     return res.status(200).json({ status: "success", diary: savedDiary });
   } catch (error) {
-    return res.status(400).json({ status: "fail", error: error.message });
+    return res.status(400).json({ status: "fail", message: error.message });
   }
 };
 
