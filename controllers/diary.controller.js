@@ -9,10 +9,12 @@ const PAGE_SIZE = 9; // 상의 후 변경
 const diaryController = {};
 
 diaryController.createDiary = async (req, res) => {
-  const { userId, title, content, image, isPublic, date } = req.body || {};
+  const { userId } = req;
+  const { title, content, image, isPublic, date } = req.body || {};
 
   try {
-    if(!isValidDiaryDate(date)) throw new Error("작성 가능한 날짜는 오늘 기준 -2일부터 오늘까지 입니다.")
+    if (!isValidDiaryDate(date))
+      throw new Error("작성 가능한 날짜는 오늘 기준 -2일부터 오늘까지 입니다.");
 
     const sentences = content.split(/[\n.?!]+/).filter((s) => s.trim() !== "");
 
@@ -40,7 +42,7 @@ diaryController.createDiary = async (req, res) => {
       isPublic,
       date,
       corrections,
-      comment: commentText
+      comment: commentText,
     });
 
     const savedDiary = await diary.save();
