@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 require("../models/User");
 const Diary = require("../models/Diary");
+const { kstDateKey, kstDateKeyMinusDays } = require("../utils/time");
 const { correctDiary, generateDiaryComment } = require("../services/chatGPT");
 const isValidDiaryDate = require("../utils/isValidDiaryDate");
 
@@ -12,7 +13,8 @@ diaryController.createDiary = async (req, res) => {
   const { userId, title, content, image, isPublic, date } = req.body || {};
 
   try {
-    if(!isValidDiaryDate(date)) throw new Error("작성 가능한 날짜는 오늘 기준 -2일부터 오늘까지 입니다.")
+    if (!isValidDiaryDate(date))
+      throw new Error("작성 가능한 날짜는 오늘 기준 -2일부터 오늘까지 입니다.");
 
     const sentences = content.split(/[\n.?!]+/).filter((s) => s.trim() !== "");
 
@@ -40,7 +42,7 @@ diaryController.createDiary = async (req, res) => {
       isPublic,
       date,
       corrections,
-      comment: commentText
+      comment: commentText,
     });
 
     const savedDiary = await diary.save();
@@ -67,7 +69,7 @@ diaryController.getAllDiaries = async (req, res) => {
     }
 
     const items = await Diary.find(filter)
-      .select("title content createdAt userId") // 필요한 필드만 가져오기
+      .select("_id title content date dateKey createdAt userId") // 필요한 필드만 가져오기
       .sort({ _id: -1 })
       .limit(PAGE_SIZE + 1)
       .populate({ path: "userId", select: "name profile -_id" })
@@ -98,6 +100,103 @@ diaryController.getAllDiaries = async (req, res) => {
       nextLastId,
       count: diaries.length,
       diaries,
+    });
+  } catch (error) {
+    res.status(500).json({ status: "fail", message: error.message });
+  }
+};
+
+// 특정 사용자의 일기들을 월 단위로 가져오기 (Read)
+diaryController.getOneUserDiaries = async (req, res) => {
+  try {
+    const { userId } = req;
+    if (!userId || !mongoose.isValidObjectId(userId)) {
+      return res.status(401).json({ status: "fail", message: "Unauthorized" });
+    }
+
+    // 프론트에서 쿼리에 year, month를 넣어줘야 함
+    const year = Number(req.query.year);
+    const month = Number(req.query.month);
+
+    const validYear = Number.isInteger(year) && year >= 1970 && year <= 2100;
+    const validMonth = Number.isInteger(month) && month >= 1 && month <= 12;
+
+    if (!validYear || !validMonth) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Invalid year or month",
+      });
+    }
+
+    const yearAndMonth = `${year}-${String(month).padStart(2, "0")}`;
+    const nextYearAndMonth =
+      month === 12
+        ? `${year + 1}-01`
+        : `${year}-${String(month + 1).padStart(2, "0")}`;
+    const startKey = `${yearAndMonth}-01`;
+    const endKey = `${nextYearAndMonth}-01`;
+
+    // DB에서 특정 달의 특정 사용자의 일기만 추출
+    const rows = await Diary.find({
+      userId,
+      dateKey: { $gte: startKey, $lt: endKey }, // startKey 이상 endKey 미만
+    })
+      .select("_id dateKey")
+      .lean();
+
+    // 빠른 조회를 위한 맵 구성
+    // Map의 키: dateKey(YYYY-MM-DD), 값: _id
+    const map = new Map(rows.map((r) => [r.dateKey, String(r._id)]));
+
+    // 달의 모든 날짜 만들기
+    const daysInMonth = new Date(year, month, 0).getDate(); // 해당 달의 총 일수
+    const today = kstDateKey(); // 오늘
+    const yesterday = kstDateKeyMinusDays(1); // 어제
+    const beforeYesterday = kstDateKeyMinusDays(2); // 그제
+
+    // 달력에 뿌릴 days 배열 만들기
+    const days = Array.from({ length: daysInMonth }, (_, i) => {
+      const day = String(i + 1).padStart(2, "0");
+      const dk = `${yearAndMonth}-${day}`;
+      return {
+        date: dk,
+        id: map.get(dk) ?? null,
+        canWrite: dk === today || dk === yesterday || dk === beforeYesterday,
+      };
+    });
+
+    return res.status(200).json({ status: "success", year, month, days });
+  } catch (error) {
+    res.status(500).json({ status: "fail", message: error.message });
+  }
+};
+
+// 특정 사용자의 특정 날짜 일기 가져오기 (Read)
+diaryController.getDiaryByDate = async (req, res) => {
+  try {
+    const { userId } = req;
+    if (!userId || !mongoose.isValidObjectId(userId)) {
+      return res.status(401).json({ status: "fail", message: "Unauthorized" });
+    }
+
+    const { date } = req.query; // 프론트에서 쿼리에 "YYYY-MM-DD" 형식으로 날짜를 줘야 함
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return res
+        .status(400)
+        .json({ status: "fail", message: "Invalid date format" });
+    }
+
+    const doc = await Diary.findOne({ userId, dateKey: date })
+      .select(
+        "_id title content image isPublic date dateKey createdAt updatedAt"
+      )
+      .lean();
+
+    // doc가 있으면 상세 모달/페이지로 보여주고, 없으면 "새 일기 작성" UI로 전환함
+    return res.status(200).json({
+      status: "success",
+      found: !!doc,
+      diary: doc ?? null,
     });
   } catch (error) {
     res.status(500).json({ status: "fail", message: error.message });
