@@ -8,12 +8,12 @@ router.get("/", diaryController.getAllDiaries);
 router.get(
   "/my",
   authController.authenticate,
-  diaryController.getOneUserDiaries
+  diaryController.getUserDiariesByMonth
 );
 router.get(
   "/my/date",
   authController.authenticate,
-  diaryController.getDiaryByDate
+  diaryController.getUserDiaryByDate
 );
 
 module.exports = router;
