@@ -10,7 +10,8 @@ const PAGE_SIZE = 9; // 상의 후 변경
 const diaryController = {};
 
 diaryController.createDiary = async (req, res) => {
-  const { userId, title, content, image, isPublic, date } = req.body || {};
+  const { userId } = req;
+  const { title, content, image, isPublic, date } = req.body || {};
 
   try {
     if (!isValidDiaryDate(date))
