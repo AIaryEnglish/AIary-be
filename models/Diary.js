@@ -27,6 +27,7 @@ const diarySchema = new Schema(
       immutable: true, // 생성 후 변경 불가
       match: /^\d{4}-\d{2}-\d{2}$/,
     },
+    comment: { type: String, required: true },
   },
   { timestamps: true }
 );
