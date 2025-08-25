@@ -62,9 +62,7 @@ diaryController.getAllDiaries = async (req, res) => {
     const raw = typeof lastId === "string" ? lastId.trim() : lastId;
     if (raw) {
       if (!mongoose.isValidObjectId(raw)) {
-        return res
-          .status(400)
-          .json({ status: "fail", message: "Invalid lastId" });
+        throw new Error("유효한 lastId가 아닙니다.");
       }
       filter._id = { $lt: mongoose.Types.ObjectId.createFromHexString(raw) };
     }
@@ -103,16 +101,16 @@ diaryController.getAllDiaries = async (req, res) => {
       diaries,
     });
   } catch (error) {
-    res.status(500).json({ status: "fail", message: error.message });
+    res.status(400).json({ status: "fail", message: error.message });
   }
 };
 
 // 특정 사용자의 일기들을 월 단위로 가져오기 (Read)
-diaryController.getOneUserDiaries = async (req, res) => {
+diaryController.getUserDiariesByMonth = async (req, res) => {
   try {
     const { userId } = req;
     if (!userId || !mongoose.isValidObjectId(userId)) {
-      return res.status(401).json({ status: "fail", message: "Unauthorized" });
+      throw new Error("권한이 없습니다.");
     }
 
     // 프론트에서 쿼리에 year, month를 넣어줘야 함
@@ -122,12 +120,8 @@ diaryController.getOneUserDiaries = async (req, res) => {
     const validYear = Number.isInteger(year) && year >= 1970 && year <= 2100;
     const validMonth = Number.isInteger(month) && month >= 1 && month <= 12;
 
-    if (!validYear || !validMonth) {
-      return res.status(400).json({
-        status: "fail",
-        message: "Invalid year or month",
-      });
-    }
+    if (!validYear || !validMonth)
+      throw new Error("유효한 연도 또는 날짜가 아닙니다.");
 
     const yearAndMonth = `${year}-${String(month).padStart(2, "0")}`;
     const nextYearAndMonth =
@@ -168,23 +162,23 @@ diaryController.getOneUserDiaries = async (req, res) => {
 
     return res.status(200).json({ status: "success", year, month, days });
   } catch (error) {
-    res.status(500).json({ status: "fail", message: error.message });
+    res.status(400).json({ status: "fail", message: error.message });
   }
 };
 
 // 특정 사용자의 특정 날짜 일기 가져오기 (Read)
-diaryController.getDiaryByDate = async (req, res) => {
+diaryController.getUserDiaryByDate = async (req, res) => {
   try {
     const { userId } = req;
     if (!userId || !mongoose.isValidObjectId(userId)) {
-      return res.status(401).json({ status: "fail", message: "Unauthorized" });
+      throw new Error("권한이 없습니다.");
     }
 
     const { date } = req.query; // 프론트에서 쿼리에 "YYYY-MM-DD" 형식으로 날짜를 줘야 함
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      return res
-        .status(400)
-        .json({ status: "fail", message: "Invalid date format" });
+      throw new Error(
+        "유효한 날짜 형식이 아닙니다. 'YYYY-MM-DD' 형식으로 입력해 주세요."
+      );
     }
 
     const doc = await Diary.findOne({ userId, dateKey: date })
@@ -200,7 +194,7 @@ diaryController.getDiaryByDate = async (req, res) => {
       diary: doc ?? null,
     });
   } catch (error) {
-    res.status(500).json({ status: "fail", message: error.message });
+    res.status(400).json({ status: "fail", message: error.message });
   }
 };
 
