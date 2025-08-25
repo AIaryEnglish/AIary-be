@@ -1,4 +1,6 @@
-const { utcToZonedTime, format } = require("date-fns-tz");
+const dateFnsTz = require("date-fns-tz");
+const utcToZonedTime = dateFnsTz.utcToZonedTime;
+const format = dateFnsTz.format;
 
 const ZONE = "Asia/Seoul";
 
