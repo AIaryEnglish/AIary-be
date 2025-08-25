@@ -6,7 +6,7 @@ const router = express.Router();
 router.post("/", authController.authenticate, diaryController.createDiary);
 router.get("/", diaryController.getAllDiaries);
 router.get(
-  "/my",
+  "/my/month",
   authController.authenticate,
   diaryController.getUserDiariesByMonth
 );
