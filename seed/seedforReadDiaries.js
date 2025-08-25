@@ -3,6 +3,7 @@ require("dotenv").config();
 
 const User = require("../models/User");
 const Diary = require("../models/Diary");
+const Vocabook = require("../models/Vocabook");
 
 const MONGODB_URI = process.env.MONGODB_URI_PROD;
 
@@ -14,7 +15,8 @@ const seed = async () => {
     // 기존 데이터 삭제
     await User.deleteMany({});
     await Diary.deleteMany({});
-    console.log("기존 User/Diary 데이터 삭제 완료");
+    await Vocabook.deleteMany({});
+    console.log("기존 User/Diary/Vocab 데이터 삭제 완료");
 
     // 1. User 시드 데이터 생성 및 삽입
     const users = await User.insertMany([
@@ -117,6 +119,71 @@ const seed = async () => {
 
     await Diary.insertMany(diaries);
     console.log("Diary 시드 데이터 삽입 완료");
+
+    const aliceVocabDiary = await Diary.findOne({
+      title: /Vocabulary List/,
+    });
+    console.log("Alice Vocabulary Diary ID:", aliceVocabDiary._id);
+
+    if (aliceVocabDiary) {
+      await Vocabook.insertMany([
+        {
+          userId: users[0]._id,
+          diaryId: aliceVocabDiary._id,
+          word: "green",
+          meaning: "having the colour of grass",
+          example: "Wait for the light to turn green.",
+          status: "mastered",
+          isDeleated: false,
+        },
+        {
+          userId: users[0]._id,
+          diaryId: aliceVocabDiary._id,
+          word: "study",
+          meaning: "to learn about a subject",
+          example: "She studies English every morning.",
+          status: "learning",
+          isDeleated: false,
+        },
+        {
+          userId: users[0]._id,
+          diaryId: aliceVocabDiary._id,
+          word: "create",
+          meaning: "to make something new",
+          example: "He wants to create a new mobile app.",
+          status: "learning",
+          isDeleated: false,
+        },
+        {
+          userId: users[0]._id,
+          diaryId: aliceVocabDiary._id,
+          word: "improve",
+          meaning: "to make something better",
+          example: "She practices every day to improve her skills.",
+          status: "learning",
+          isDeleated: false,
+        },
+        {
+          userId: users[0]._id,
+          diaryId: aliceVocabDiary._id,
+          word: "discover",
+          meaning: "to find something for the first time",
+          example: "They discovered a new restaurant in town.",
+          status: "learning",
+          isDeleated: false,
+        },
+        {
+          userId: users[0]._id,
+          diaryId: aliceVocabDiary._id,
+          word: "share",
+          meaning: "to give part of something to others",
+          example: "He likes to share his lunch with his friends.",
+          status: "learning",
+          isDeleated: false,
+        },
+      ]);
+      console.log("Vocabook 시드 데이터 삽입 완료");
+    }
   } catch (error) {
     console.error(error);
     process.exitCode = 1;
