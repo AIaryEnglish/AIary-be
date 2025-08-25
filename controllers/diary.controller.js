@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 require("../models/User");
 const Diary = require("../models/Diary");
-const { kstDateKey, kstDateKeyMinusDays } = require("../utils/time");
+const { kstDateKey, kstDateKeyMinusDays } = require("../utils/kst-utils");
 const { correctDiary, generateDiaryComment } = require("../services/chatGPT");
 const isValidDiaryDate = require("../utils/isValidDiaryDate");
 
@@ -85,6 +85,8 @@ diaryController.getAllDiaries = async (req, res) => {
       title: d.title,
       content: d.content,
       createdAt: d.createdAt,
+      dateKey: d.dateKey,
+      date: d.date,
       author: {
         name: d.userId?.name ?? null,
         profile: d.userId?.profile ?? null,
