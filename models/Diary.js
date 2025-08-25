@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
-const { format, utcToZonedTime } = require("date-fns-tz");
+const { toKstYmd } = require("../utils/kst-utils");
 
 const correctionSchema = new Schema({
   originalSentence: { type: String, required: true },
@@ -37,9 +37,8 @@ diarySchema.pre("validate", function (next) {
   // this: 현재 저장/검증 중인 문서(doc)
   // 새 문서거나, date 필드가 수정된 경우에 dateKey 재계산
   if (this.isNew || this.isModified("date")) {
-    const z = "Asia/Seoul";
-    const d = this.date instanceof Date ? this.date : new Date(this.date);
-    if (!(d instanceof Date) || Number.isNaN(d.getTime())) {
+    const d = new Date(this.date);
+    if (Number.isNaN(d.getTime())) {
       return next(
         new mongoose.Error.ValidatorError({
           path: "date",
@@ -47,8 +46,7 @@ diarySchema.pre("validate", function (next) {
         })
       );
     }
-    const zoned = utcToZonedTime(d, z); // date(UTC) → KST 시각
-    this.dateKey = format(zoned, "yyyy-MM-dd", { timeZone: z });
+    this.dateKey = toKstYmd(d); // 'YYYY-MM-DD' (KST)
   }
   next();
 });
