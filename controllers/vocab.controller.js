@@ -1,15 +1,14 @@
 const mongoose = require("mongoose");
 require("../models/Diary");
-const Vocabook = require("../models/Vocabook");
+const VocaBook = require("../models/Vocabook");
 
 const vocabController = {};
 
-// 특정 다이어리의 단어 목록 가져오기
 vocabController.getAllWords = async (req, res) => {
   try {
-    const vocabList = await Vocabook.find({
-      diaryId: req.params.diaryId,
-      isDeleated: false,
+    const vocabList = await VocaBook.find({
+      user: req.userId,
+      isDeleted: false,
     }).sort({ createdAt: -1 });
     res.json(vocabList);
   } catch (err) {
@@ -19,7 +18,11 @@ vocabController.getAllWords = async (req, res) => {
 
 vocabController.toggleStatus = async (req, res) => {
   try {
-    const vocab = await Vocabook.findById(req.params.id);
+    const vocab = await VocaBook.findOne({
+      _id: req.params.id,
+      user: req.userId,
+    });
+
     if (!vocab) return res.status(404).json({ message: "Not found" });
 
     vocab.status = vocab.status === "learning" ? "mastered" : "learning";
@@ -33,12 +36,12 @@ vocabController.toggleStatus = async (req, res) => {
 
 vocabController.deleteWord = async (req, res) => {
   try {
-    console.log("Delete called for id:", req.params.id);
-    const vocab = await Vocabook.findByIdAndUpdate(
-      req.params.id,
-      { isDeleated: true }, // 실제 삭제 X
+    const vocab = await VocaBook.findOneAndUpdate(
+      { _id: req.params.id, user: req.userId },
+      { isDeleted: true },
       { new: true }
     );
+    console.log("vocab:", vocab);
     if (!vocab) return res.status(404).json({ message: "Not found" });
 
     res.json({ message: "Deleted successfully" });
