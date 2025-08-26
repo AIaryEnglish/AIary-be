@@ -10,9 +10,9 @@ vocabController.getAllWords = async (req, res) => {
       user: req.userId,
       isDeleted: false,
     }).sort({ createdAt: -1 });
-    res.json(vocabList);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    return res.status(200).json({ status: "success", vocabList: vocabList });
+  } catch (error) {
+    return res.status(400).json({ status: "fail", message: error.message });
   }
 };
 
@@ -23,14 +23,14 @@ vocabController.toggleStatus = async (req, res) => {
       user: req.userId,
     });
 
-    if (!vocab) return res.status(404).json({ message: "Not found" });
+    if (!vocab) throw new Error("선택된 단어가 존재하지 않습니다.");
 
     vocab.status = vocab.status === "learning" ? "mastered" : "learning";
     await vocab.save();
 
-    res.json(vocab);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    return res.status(200).json({ status: "success", vocab: vocab });
+  } catch (error) {
+    return res.status(400).json({ status: "fail", message: error.message });
   }
 };
 
@@ -42,11 +42,11 @@ vocabController.deleteWord = async (req, res) => {
       { new: true }
     );
     console.log("vocab:", vocab);
-    if (!vocab) return res.status(404).json({ message: "Not found" });
+    if (!vocab) throw new Error("선택된 단어가 존재하지 않습니다.");
 
-    res.json({ message: "Deleted successfully" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    return res.status(200).json({ status: "success" });
+  } catch (error) {
+    return res.status(400).json({ status: "fail", message: error.message });
   }
 };
 
