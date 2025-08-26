@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const diaryApi = require("./diary.api");
-const vocaApi = require("./vocab.api");
 const userApi = require("./user.api");
 const authApi = require("./auth.api");
+const vocaApi = require("./vocab.api");
 
 router.use("/vocab", vocaApi);
 router.use("/diary", diaryApi);
