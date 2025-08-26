@@ -8,17 +8,22 @@ const vocabController = {};
 
 vocabController.createWord = async (req, res) => {
   try {
+    const { userId } = req;
+    if (!userId || !mongoose.isValidObjectId(userId)) {
+      throw new Error("권한이 없습니다.");
+    }
+
     const { vocab } = req.body;
-    const userId = req.user._id;
     if (!vocab) throw new Error("선택된 단어가 존재하지 않습니다.");
 
     const vocabObj = await generateVocabMeaning(vocab);
+    const vocabOriginal = vocabObj.word;
     const vocabMeaning = vocabObj.meaning;
     const vocabExample = vocabObj.example;
 
     const newVoca = new Vocabook({
       userId,
-      word: vocab,
+      word: vocabOriginal,
       meaning: vocabMeaning,
       example: vocabExample,
       status: "learning",
@@ -34,8 +39,13 @@ vocabController.createWord = async (req, res) => {
 
 vocabController.getAllWords = async (req, res) => {
   try {
+    const { userId } = req;
+    if (!userId || !mongoose.isValidObjectId(userId)) {
+      throw new Error("권한이 없습니다.");
+    }
+
     const vocabList = await VocaBook.find({
-      user: req.userId,
+      userId: userId,
       isDeleted: false,
     }).sort({ createdAt: -1 });
     return res.status(200).json({ status: "success", vocabList: vocabList });
@@ -46,9 +56,14 @@ vocabController.getAllWords = async (req, res) => {
 
 vocabController.toggleStatus = async (req, res) => {
   try {
+    const { userId } = req;
+    if (!userId || !mongoose.isValidObjectId(userId)) {
+      throw new Error("권한이 없습니다.");
+    }
+
     const vocab = await VocaBook.findOne({
       _id: req.params.id,
-      user: req.userId,
+      userId: userId,
     });
     if (!vocab) throw new Error("선택된 단어가 존재하지 않습니다.");
 
@@ -63,8 +78,13 @@ vocabController.toggleStatus = async (req, res) => {
 
 vocabController.deleteWord = async (req, res) => {
   try {
+    const { userId } = req;
+    if (!userId || !mongoose.isValidObjectId(userId)) {
+      throw new Error("권한이 없습니다.");
+    }
+
     const vocab = await VocaBook.findOneAndUpdate(
-      { _id: req.params.id, user: req.userId },
+      { _id: req.params.id, userId: userId },
       { isDeleted: true },
       { new: true }
     );

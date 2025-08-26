@@ -78,13 +78,14 @@ const generateDiaryComment = async (diaryContent) => {
 // 3. 단어/숙어 생성
 const generateVocabMeaning = async (vocab) => {
   const prompt = `
-    아래의 영어 단어/숙어의 뜻(영어)과 예문 하나를 JSON 형식으로 반환해줘.
+    아래의 영어 단어/숙어의 사전 속 원형, 뜻(영어), 예문 하나를 JSON 형식으로 반환해줘.
       
     단어/숙어:
     ${vocab}
 
     응답 형식:
     {
+    "word": "",
     "meaning": "",
     "example": ""
     }`;
