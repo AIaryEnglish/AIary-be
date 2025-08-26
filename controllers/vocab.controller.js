@@ -1,8 +1,36 @@
 const mongoose = require("mongoose");
 require("../models/Diary");
+const { generateVocabMeaning } = require("../services/chatGPT");
 const VocaBook = require("../models/Vocabook");
+const Vocabook = require("../models/Vocabook");
 
 const vocabController = {};
+
+vocabController.createWord = async (req, res) => {
+  try {
+    const { vocab } = req.body;
+    const userId = req.user._id;
+    if (!vocab) throw new Error("선택된 단어가 존재하지 않습니다.");
+
+    const vocabObj = await generateVocabMeaning(vocab);
+    const vocabMeaning = vocabObj.meaning;
+    const vocabExample = vocabObj.example;
+
+    const newVoca = new Vocabook({
+      userId,
+      word: vocab,
+      meaning: vocabMeaning,
+      example: vocabExample,
+      status: "learning",
+      isDeleted: false,
+    });
+
+    const savedVocab = await newVoca.save();
+    return res.status(200).json({ status: "success", vocab: savedVocab });
+  } catch (error) {
+    return res.status(400).json({ status: "fail", message: error.message });
+  }
+};
 
 vocabController.getAllWords = async (req, res) => {
   try {
@@ -22,7 +50,6 @@ vocabController.toggleStatus = async (req, res) => {
       _id: req.params.id,
       user: req.userId,
     });
-
     if (!vocab) throw new Error("선택된 단어가 존재하지 않습니다.");
 
     vocab.status = vocab.status === "learning" ? "mastered" : "learning";
@@ -41,10 +68,9 @@ vocabController.deleteWord = async (req, res) => {
       { isDeleted: true },
       { new: true }
     );
-    console.log("vocab:", vocab);
     if (!vocab) throw new Error("선택된 단어가 존재하지 않습니다.");
 
-    return res.status(200).json({ status: "success" });
+    return res.status(200).json({ status: "success", id: vocab._id });
   } catch (error) {
     return res.status(400).json({ status: "fail", message: error.message });
   }

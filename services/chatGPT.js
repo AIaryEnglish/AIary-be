@@ -1,6 +1,6 @@
 require("dotenv").config();
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const apiEndpoint = 'https://api.openai.com/v1/chat/completions';
+const apiEndpoint = "https://api.openai.com/v1/chat/completions";
 
 // 공통 함수: ChatGPT API 호출
 const callChatGPT = async (prompt, temperature = 0.3) => {
@@ -75,7 +75,25 @@ const generateDiaryComment = async (diaryContent) => {
   return await callChatGPT(prompt);
 };
 
+// 3. 단어/숙어 생성
+const generateVocabMeaning = async (vocab) => {
+  const prompt = `
+    아래의 영어 단어/숙어의 뜻(영어)과 예문 하나를 JSON 형식으로 반환해줘.
+      
+    단어/숙어:
+    ${vocab}
+
+    응답 형식:
+    {
+    "meaning": "",
+    "example": ""
+    }`;
+
+  return await callChatGPT(prompt);
+};
+
 module.exports = {
   correctDiary,
   generateDiaryComment,
+  generateVocabMeaning,
 };
