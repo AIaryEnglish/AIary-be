@@ -185,7 +185,7 @@ diaryController.getUserDiaryByDate = async (req, res) => {
 
     const doc = await Diary.findOne({ userId, dateKey: date })
       .select(
-        "_id title content image isPublic date dateKey createdAt updatedAt"
+        "_id title content image isPublic date dateKey createdAt updatedAt comment corrections"
       )
       .lean();
 
