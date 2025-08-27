@@ -15,5 +15,11 @@ router.get(
   authController.authenticate,
   diaryController.getUserDiaryByDate
 );
+router.put("/:id", authController.authenticate, diaryController.updateDiary);
+router.put(
+  "/published/:id",
+  authController.authenticate,
+  diaryController.updatePublishedDiary
+);
 
 module.exports = router;

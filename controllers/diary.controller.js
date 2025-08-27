@@ -200,4 +200,52 @@ diaryController.getUserDiaryByDate = async (req, res) => {
   }
 };
 
+diaryController.updateDiary = async (req, res) => {
+  try {
+    const { userId } = req;
+    const diaryId = req.params.id;
+    const { title, content, image, isPublic } = req.body;
+
+    const diary = await Diary.findById(diaryId);
+    if (!diary) throw new Error("Diary not found");
+
+    if (diary.userId.toString() !== userId)
+      throw new Error("You aren't authorized to update");
+
+    const updatedDiary = await Diary.findByIdAndUpdate(
+      { _id: diaryId },
+      { title, content, image, isPublic },
+      { new: true }
+    );
+
+    return res.status(200).json({ status: "success", data: updatedDiary });
+  } catch (error) {
+    res.status(400).json({ status: "fail", message: error.message });
+  }
+};
+
+diaryController.updatePublishedDiary = async (req, res) => {
+  try {
+    const { userId } = req;
+    const diaryId = req.params.id;
+    const { isPublic } = req.body;
+
+    const diary = await Diary.findById(diaryId);
+    if (!diary) throw new Error("Diary not found");
+
+    if (diary.userId.toString() !== userId)
+      throw new Error("You aren't authorized to update");
+
+    const updatedDiary = await Diary.findByIdAndUpdate(
+      { _id: diaryId },
+      { isPublic },
+      { new: true }
+    );
+
+    return res.status(200).json({ status: "success", data: updatedDiary });
+  } catch (error) {
+    return res.status(400).json({ status: "fail", message: error.message });
+  }
+};
+
 module.exports = diaryController;
