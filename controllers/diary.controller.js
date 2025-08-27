@@ -200,4 +200,84 @@ diaryController.getUserDiaryByDate = async (req, res) => {
   }
 };
 
+diaryController.updateDiary = async (req, res) => {
+  try {
+    const { userId } = req;
+    const diaryId = req.params.id;
+    const { title, content, image, isPublic } = req.body;
+
+    const diary = await Diary.findById(diaryId);
+    if (!diary) throw new Error("Diary not found");
+
+    if (!diary.userId.equals(userId))
+      throw new Error("You aren't authorized to update");
+
+    const ONE_DAY = 24 * 60 * 60 * 1000; // 24시간(ms)
+
+    if (Date.now() - diary.createdAt.getTime() > ONE_DAY)
+      throw new Error("You can only update within 1 day of creation");
+
+    let corrections = diary.corrections;
+    if (content && content !== diary.content) {
+      const sentences = content
+        .split(/[\n.?!]+/)
+        .filter((s) => s.trim() !== "");
+
+      const corrections = await Promise.all(
+        sentences.map(async (sentence) => {
+          const result = await correctDiary(sentence);
+          return {
+            originalSentence: sentence,
+            correctedSentence: result?.correctedSentence || sentence,
+            reason: result?.reason || "No corrections needed",
+            similarExpressions: result?.similarExpressions || [],
+            extraExamples: result?.extraExamples || [],
+          };
+        })
+      );
+
+      const commentObj = await generateDiaryComment(content);
+      const commentText = commentObj.commentText;
+
+      diary.corrections = corrections;
+      diary.comment = commentText;
+    }
+
+    diary.title = title ?? diary.title;
+    diary.content = content ?? diary.content;
+    diary.image = image ?? diary.image;
+    diary.isPublic = isPublic ?? diary.isPublic;
+
+    await diary.save();
+
+    return res.status(200).json({ status: "success", data: diary });
+  } catch (error) {
+    res.status(400).json({ status: "fail", message: error.message });
+  }
+};
+
+diaryController.updatePublishedDiary = async (req, res) => {
+  try {
+    const { userId } = req;
+    const diaryId = req.params.id;
+    const { isPublic } = req.body;
+
+    const diary = await Diary.findById(diaryId);
+    if (!diary) throw new Error("Diary not found");
+
+    if (diary.userId.toString() !== userId)
+      throw new Error("You aren't authorized to update");
+
+    const updatedDiary = await Diary.findByIdAndUpdate(
+      { _id: diaryId },
+      { isPublic },
+      { new: true }
+    );
+
+    return res.status(200).json({ status: "success", data: updatedDiary });
+  } catch (error) {
+    return res.status(400).json({ status: "fail", message: error.message });
+  }
+};
+
 module.exports = diaryController;
