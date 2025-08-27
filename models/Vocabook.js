@@ -16,8 +16,8 @@ const vocabookSchema = new Schema(
   }
 );
 
-// 중복 방지: 같은 사용자가 같은 일기에서 같은 단어를 여러 번 추가 못하도록
-vocabookSchema.index({ userId: 1, diaryId: 1, word: 1 }, { unique: true });
+// 중복 방지: 같은 사용자가 같은 단어를 여러 번 추가 못하도록
+vocabookSchema.index({ userId: 1, word: 1 }, { unique: true });
 
 const Vocabook = mongoose.model("Vocabook", vocabookSchema);
 module.exports = Vocabook;
