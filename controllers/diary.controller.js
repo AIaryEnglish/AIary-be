@@ -212,6 +212,12 @@ diaryController.updateDiary = async (req, res) => {
     if (diary.userId.toString() !== userId)
       throw new Error("You aren't authorized to update");
 
+    const ONE_DAY = 24 * 60 * 60 * 1000; // 24시간(ms)
+    const now = Date.now();
+    const createdAt = diary.createdAt.getTime();
+
+    if (now - createdAt > ONE_DAY) throw new Error("You can only update within 1 day of creation");
+
     const updatedDiary = await Diary.findByIdAndUpdate(
       { _id: diaryId },
       { title, content, image, isPublic },
