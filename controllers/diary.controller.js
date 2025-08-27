@@ -209,22 +209,48 @@ diaryController.updateDiary = async (req, res) => {
     const diary = await Diary.findById(diaryId);
     if (!diary) throw new Error("Diary not found");
 
-    if (diary.userId.toString() !== userId)
+    if (!diary.userId.equals(userId))
       throw new Error("You aren't authorized to update");
 
     const ONE_DAY = 24 * 60 * 60 * 1000; // 24시간(ms)
-    const now = Date.now();
-    const createdAt = diary.createdAt.getTime();
 
-    if (now - createdAt > ONE_DAY) throw new Error("You can only update within 1 day of creation");
+    if (Date.now() - diary.createdAt.getTime() > ONE_DAY)
+      throw new Error("You can only update within 1 day of creation");
 
-    const updatedDiary = await Diary.findByIdAndUpdate(
-      { _id: diaryId },
-      { title, content, image, isPublic },
-      { new: true }
-    );
+    let corrections = diary.corrections;
+    if (content && content !== diary.content) {
+      const sentences = content
+        .split(/[\n.?!]+/)
+        .filter((s) => s.trim() !== "");
 
-    return res.status(200).json({ status: "success", data: updatedDiary });
+      const corrections = await Promise.all(
+        sentences.map(async (sentence) => {
+          const result = await correctDiary(sentence);
+          return {
+            originalSentence: sentence,
+            correctedSentence: result?.correctedSentence || sentence,
+            reason: result?.reason || "No corrections needed",
+            similarExpressions: result?.similarExpressions || [],
+            extraExamples: result?.extraExamples || [],
+          };
+        })
+      );
+
+      const commentObj = await generateDiaryComment(content);
+      const commentText = commentObj.commentText;
+
+      diary.corrections = corrections;
+      diary.comment = commentText;
+    }
+
+    diary.title = title ?? diary.title;
+    diary.content = content ?? diary.content;
+    diary.image = image ?? diary.image;
+    diary.isPublic = isPublic ?? diary.isPublic;
+
+    await diary.save();
+
+    return res.status(200).json({ status: "success", data: diary });
   } catch (error) {
     res.status(400).json({ status: "fail", message: error.message });
   }
