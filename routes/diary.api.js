@@ -21,5 +21,6 @@ router.put(
   authController.authenticate,
   diaryController.updatePublishedDiary
 );
+router.delete("/:id", authController.authenticate, diaryController.deleteDiary);
 
 module.exports = router;
