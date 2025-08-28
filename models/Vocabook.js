@@ -8,7 +8,6 @@ const vocabookSchema = new Schema(
     meaning: { type: String }, // OpenAI에서 받아온 뜻
     example: { type: String }, // OpenAI에서 받아온 예문
     status: { type: String, default: "learning" }, //단어 상태
-    isDeleted: { type: Boolean, default: false }, //삭제
   },
   {
     timestamps: true, // createdAt, updatedAt 자동 관리

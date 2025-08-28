@@ -27,12 +27,17 @@ vocabController.createWord = async (req, res) => {
       meaning: vocabMeaning,
       example: vocabExample,
       status: "learning",
-      isDeleted: false,
     });
 
     const savedVocab = await newVoca.save();
     return res.status(200).json({ status: "success", vocab: savedVocab });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({
+        status: "fail",
+        message: "이미 단어장에 추가된 단어입니다.",
+      });
+    }
     return res.status(400).json({ status: "fail", message: error.message });
   }
 };
@@ -46,7 +51,6 @@ vocabController.getAllWords = async (req, res) => {
 
     const vocabList = await VocaBook.find({
       userId: userId,
-      isDeleted: false,
     }).sort({ createdAt: -1 });
     return res.status(200).json({ status: "success", vocabList: vocabList });
   } catch (error) {
@@ -83,9 +87,8 @@ vocabController.deleteWord = async (req, res) => {
       throw new Error("권한이 없습니다.");
     }
 
-    const vocab = await VocaBook.findOneAndUpdate(
+    const vocab = await VocaBook.findOneAndDelete(
       { _id: req.params.id, userId: userId },
-      { isDeleted: true },
       { new: true }
     );
     if (!vocab) throw new Error("선택된 단어가 존재하지 않습니다.");
