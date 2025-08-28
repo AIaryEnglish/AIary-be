@@ -47,7 +47,7 @@ diaryController.createDiary = async (req, res) => {
     });
 
     const savedDiary = await diary.save();
-    return res.status(200).json({ status: "success", diary: savedDiary });
+    return res.status(200).json({ status: "success", data: savedDiary });
   } catch (error) {
     return res.status(400).json({ status: "fail", message: error.message });
   }
@@ -193,7 +193,7 @@ diaryController.getUserDiaryByDate = async (req, res) => {
     return res.status(200).json({
       status: "success",
       found: !!doc,
-      diary: doc ?? null,
+      data: doc ?? null,
     });
   } catch (error) {
     res.status(400).json({ status: "fail", message: error.message });
@@ -218,12 +218,13 @@ diaryController.updateDiary = async (req, res) => {
       throw new Error("You can only update within 1 day of creation");
 
     let corrections = diary.corrections;
+
     if (content && content !== diary.content) {
       const sentences = content
         .split(/[\n.?!]+/)
         .filter((s) => s.trim() !== "");
 
-      const corrections = await Promise.all(
+      const newCorrections = await Promise.all(
         sentences.map(async (sentence) => {
           const result = await correctDiary(sentence);
           return {
@@ -239,7 +240,7 @@ diaryController.updateDiary = async (req, res) => {
       const commentObj = await generateDiaryComment(content);
       const commentText = commentObj.commentText;
 
-      diary.corrections = corrections;
+      diary.corrections = newCorrections;
       diary.comment = commentText;
     }
 
@@ -285,8 +286,9 @@ diaryController.deleteDiary = async (req, res) => {
     const { userId } = req;
     const diaryId = req.params.id;
 
-    if (!mongoose.Types.ObjectId.isValid(diaryId)) throw new Error("Invalid diary ID")
-      
+    if (!mongoose.Types.ObjectId.isValid(diaryId))
+      throw new Error("Invalid diary ID");
+
     const diary = await Diary.findById(diaryId);
     if (!diary) throw new Error("Diary not found");
 
