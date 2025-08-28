@@ -280,4 +280,25 @@ diaryController.updatePublishedDiary = async (req, res) => {
   }
 };
 
+diaryController.deleteDiary = async (req, res) => {
+  try {
+    const { userId } = req;
+    const diaryId = req.params.id;
+
+    if (!mongoose.Types.ObjectId.isValid(diaryId)) throw new Error("Invalid diary ID")
+      
+    const diary = await Diary.findById(diaryId);
+    if (!diary) throw new Error("Diary not found");
+
+    if (diary.userId.toString() !== userId)
+      throw new Error("You aren't authorized to delete");
+
+    const deletedDiary = await Diary.findByIdAndDelete(diaryId);
+
+    return res.status(200).json({ status: "success", data: deletedDiary });
+  } catch (error) {
+    return res.status(400).json({ status: "fail", message: error.message });
+  }
+};
+
 module.exports = diaryController;
