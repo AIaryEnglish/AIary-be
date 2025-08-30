@@ -68,7 +68,7 @@ diaryController.getAllDiaries = async (req, res) => {
     }
 
     const items = await Diary.find(filter)
-      .select("_id title content date dateKey createdAt userId") // 필요한 필드만 가져오기
+      .select("_id title content image date dateKey createdAt userId") // 필요한 필드만 가져오기
       .sort({ _id: -1 })
       .limit(PAGE_SIZE + 1)
       .populate({ path: "userId", select: "name profile -_id" })
@@ -84,6 +84,7 @@ diaryController.getAllDiaries = async (req, res) => {
       _id: d._id,
       title: d.title,
       content: d.content,
+      image: d.image,
       createdAt: d.createdAt,
       dateKey: d.dateKey,
       date: d.date,
